@@ -1,0 +1,26 @@
+# set env in Ubuntu 9.10 32bit
+
+export ARCH=arm
+export CROSS_COMPILE=arm-eabi-
+export PATH=$PWD/prebuilt/linux-x86/toolchain/arm-eabi-4.2.1/bin/:$PATH
+export KERNEL_DIR=$PWD/kernel
+export KERNEL_OUT=$PWD/kernel_out
+export BOOTIMG_OUT=$PWD/bootimg
+
+mkdir kernel_out
+
+# kernel config
+make -C kernel O=$KERNEL_OUT ARCH=arm CROSS_COMPILE=arm-eabi- msm7627-perf_defconfig
+
+# make kernel
+make -C kernel O=$KERNEL_OUT ARCH=arm CROSS_COMPILE=arm-eabi-
+make -C kernel O=$KERNEL_OUT ARCH=arm CROSS_COMPILE=arm-eabi- modules
+
+# kernel output zImage
+# $KERNEL_OUT/arch/arm/boot/zImage
+
+# boot.img
+./mkbootimg --second $BOOTIMG_OUT/SplashScreen.raw --kernel kernel_out/arch/arm/boot/zImage --ramdisk $BOOTIMG_OUT/ramdisk.img --cmdline "mem=213M console=ttyMSM2,115200n8 androidboot.hardware=qcom" --base 0x00400000 --pagesize 4096 --output $BOOTIMG_OUT/boot.img
+
+# fastboot boot parition
+./fastboot flash boot $BOOTIMG_OUT/boot.img
